@@ -13,7 +13,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.26.0" # أحدث نسخة ثابتة (Dart >= 3.8)
+          flutter-version: "3.13.0-stable" # نسخة مستقرة مع Dart >= 3.8
 
       - name: Clear Flutter cache
         run: flutter clean
