@@ -1,7 +1,7 @@
 ﻿name: Build iOS (Unsigned IPA)
 
 on:
-  workflow_dispatch: # تشغيل يدوي من GitHub Actions
+  workflow_dispatch:
 
 jobs:
   build:
@@ -13,7 +13,10 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.13.0" # نسخة حديثة تدعم Dart 3.8+
+          flutter-version: "3.26.0" # أحدث نسخة ثابتة (Dart >= 3.8)
+
+      - name: Clear Flutter cache
+        run: flutter clean
 
       - name: Install dependencies
         run: flutter pub get
