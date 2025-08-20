@@ -10,27 +10,39 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      # 1️⃣ تثبيت Flutter من GitHub مباشرة
       - name: Install Flutter from GitHub
         run: |
           git clone https://github.com/flutter/flutter.git -b 3.13.0 --depth 1
-          echo "$PWD/flutter/bin" >> $GITHUB_PATH
+          export PATH="$PWD/flutter/bin:$PATH"
           flutter doctor
 
+      # 2️⃣ تنظيف أي ملفات قديمة
       - name: Clear Flutter cache
-        run: flutter clean
+        run: |
+          export PATH="$PWD/flutter/bin:$PATH"
+          flutter clean
 
+      # 3️⃣ تثبيت dependencies
       - name: Install dependencies
-        run: flutter pub get
+        run: |
+          export PATH="$PWD/flutter/bin:$PATH"
+          flutter pub get
 
+      # 4️⃣ بناء التطبيق بدون توقيع
       - name: Build iOS app (no code sign)
-        run: flutter build ios --release --no-codesign
+        run: |
+          export PATH="$PWD/flutter/bin:$PATH"
+          flutter build ios --release --no-codesign
 
+      # 5️⃣ حزم التطبيق كـ IPA
       - name: Package to IPA
         run: |
           mkdir -p build/ios/ipa/Payload
           cp -r build/ios/iphoneos/Runner.app build/ios/ipa/Payload/
           cd build/ios/ipa && zip -r app.ipa Payload
 
+      # 6️⃣ رفع الـ IPA كـ artifact
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
