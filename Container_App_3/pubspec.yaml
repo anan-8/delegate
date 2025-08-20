@@ -1,0 +1,47 @@
+name: delegate
+description: "A new Flutter project."
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.8.1 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2 # تم التحديث للإصدار المتوافق
+  cupertino_icons: ^1.0.8
+  firebase_core: ^3.15.1
+  cloud_firestore: ^5.6.11
+  firebase_storage: ^12.4.9
+  firebase_messaging: ^15.2.9
+  firebase_auth: ^5.6.2
+  google_sign_in: ^7.1.0
+  google_maps_flutter: ^2.2.6
+  geolocator: ^10.0.0
+  flutter_local_notifications: ^16.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  fonts:
+    - family: Tajawal
+      fonts:
+        - asset: assets/fonts/Tajawal-Regular.ttf
+          weight: 400 # الوزن القياسي
+        - asset: assets/fonts/Tajawal-Medium.ttf
+          weight: 500 # متوسط
+        - asset: assets/fonts/Tajawal-Bold.ttf
+          weight: 700 # غامق
+
+  assets:
+    - assets/fonts/
+  #  - assets/images/
