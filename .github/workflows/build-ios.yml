@@ -1,61 +1,79 @@
 ﻿name: Build iOS IPA
 
 on:
+  workflow_dispatch:
   push:
     branches: [main, master]
-  pull_request:
-    branches: [main, master]
-  workflow_dispatch: # يسمح بتشغيل العملية يدوياً
 
 jobs:
   build-ipa:
-    runs-on: macos-latest # ضروري لبناء iOS
-    timeout-minutes: 30
+    runs-on: macos-latest
+    timeout-minutes: 45
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Flutter (3.32.5)
+      - name: Explore project structure
+        run: |
+          echo "=== Project Structure ==="
+          ls -la
+          echo "=== Looking for key files ==="
+          find . -name "pubspec.yaml" -o -name "ios" -o -name "Podfile" 2>/dev/null || echo "No key files found"
+
+      - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.32.5"
-          channel: "stable"
           cache: true
-          cache-key: flutter-packages
-          cache-path: ${{ runner.temp }}/flutter_cache
 
-      - name: Verify Flutter version
-        run: flutter --version
-
-      - name: Install CocoaPods dependencies
+      - name: Find project root
+        id: find-root
         run: |
-          cd ios
+          if [ -f "./pubspec.yaml" ]; then
+            echo "PROJECT_ROOT=." >> $GITHUB_ENV
+          else
+            # ابحث عن مجلد يحتوي على pubspec.yaml
+            PROJECT_DIR=$(find . -name "pubspec.yaml" -exec dirname {} \; | head -1)
+            if [ -n "$PROJECT_DIR" ]; then
+              echo "PROJECT_ROOT=$PROJECT_DIR" >> $GITHUB_ENV
+            else
+              echo "ERROR: No Flutter project found!"
+              exit 1
+            fi
+          fi
+          echo "Project root: $PROJECT_ROOT"
+
+      - name: Get dependencies
+        run: |
+          cd ${{ env.PROJECT_ROOT }}
+          flutter pub get
+
+      - name: Find iOS directory
+        id: find-ios
+        run: |
+          cd ${{ env.PROJECT_ROOT }}
+          IOS_DIR=$(find . -name "ios" -type d -print -quit)
+          if [ -n "$IOS_DIR" ]; then
+            echo "IOS_PATH=$IOS_DIR" >> $GITHUB_ENV
+          else
+            echo "ERROR: No iOS directory found!"
+            exit 1
+          fi
+
+      - name: Install CocoaPods
+        run: |
+          cd ${{ env.IOS_PATH }}
           sudo gem install cocoapods
           pod install --repo-update
-        working-directory: ./ios
 
-      - name: Get Flutter dependencies
-        run: flutter pub get
+      - name: Build IPA
+        run: |
+          cd ${{ env.PROJECT_ROOT }}
+          flutter build ipa --release --no-codesign
 
-      - name: Build IPA (unsigned)
-        run: flutter build ipa --release --no-codesign --export-options-plist=ExportOptions.plist
-
-      - name: List build artifacts
-        run: ls -la build/ios/ipa/
-
-      - name: Upload IPA artifact
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: app-ipa
-          path: build/ios/ipa/*.ipa
-          retention-days: 7
-
-      - name: Upload build logs
-        uses: actions/upload-artifact@v4
-        if: always() # دائمًا ارفع حتى لو فشل البناء
-        with:
-          name: build-logs
-          path: |
-            flutter.log
-            build/**/*.log
+          path: ${{ env.PROJECT_ROOT }}/build/ios/ipa/*.ipa
