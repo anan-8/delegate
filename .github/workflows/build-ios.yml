@@ -8,7 +8,7 @@ on:
 jobs:
   build-ipa:
     runs-on: macos-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     steps:
       - name: Checkout code
@@ -23,29 +23,18 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Let Flutter generate iOS files
+      - name: Clean and regenerate iOS files
         run: |
-          # تنظيف وإعادة إنشاء ملفات iOS تلقائياً
           flutter clean
           flutter pub get
 
-          # تأكد من وجود مجلد ios
-          if [ ! -d "ios" ]; then
-            echo "Creating iOS directory..."
-            flutter create --platforms=ios --ios-language=swift .
-          fi
+          # احذف الملفات المسببة للمشاكل
+          if [ -f "ios/Podfile" ]; then rm ios/Podfile; fi
+          if [ -d "ios/Pods" ]; then rm -rf ios/Pods; fi
+          if [ -f "ios/Podfile.lock" ]; then rm ios/Podfile.lock; fi
 
-          # تحديث Podfile تلقائياً
+          # أنشئ ملفات iOS من جديد
           flutter build ios --no-codesign --release 2>/dev/null || true
-
-      - name: Fix iOS deployment target
-        run: |
-          # تأكد من iOS 13.0 في Podfile
-          if [ -f "ios/Podfile" ]; then
-            sed -i '' 's/platform :ios, .*/platform :ios, '\''13.0'\''/g' ios/Podfile
-            echo "Updated Podfile:"
-            head -3 ios/Podfile
-          fi
 
       - name: Install CocoaPods
         run: |
