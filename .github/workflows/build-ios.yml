@@ -1,14 +1,14 @@
-﻿name: Build iOS IPA - Radical Solution
+﻿name: Build iOS IPA - Nuclear Option
 
 on:
   workflow_dispatch:
   push:
-    branches: [main, master]
+    branches: [main]
 
 jobs:
   build-ipa:
     runs-on: macos-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     steps:
       - name: Checkout code
@@ -20,68 +20,42 @@ jobs:
           flutter-version: "3.32.5"
           cache: true
 
-      - name: Clean everything
+      - name: Nuclear cleanup
         run: |
+          # احذف كل شيء متعلق بالبناء
           flutter clean
-          rm -rf ios/Pods ios/Podfile.lock
+          rm -rf ios build .dart_tool .packages .flutter-plugins
 
-      - name: Get dependencies
-        run: flutter pub get
+          # أنشئ مشروع جديد مؤقت لاكتشاف الهيكل
+          mkdir -p temp_project
+          cd temp_project
+          flutter create --template=app --org com.temp temp_app
+          cd ..
 
-      - name: Recreate iOS project completely
-        run: |
-          # احذف مجلد ios بالكامل
+          # انقل ملفات iOS الجديدة
           rm -rf ios
+          cp -r temp_project/temp_app/ios .
 
-          # أنشئ مشروع iOS جديد من الصفر
-          flutter create --platforms=ios --ios-language=swift --org com.yourcompany .
+          # انقل pubspec.yaml والمحتوى الأصلي
+          cp pubspec.yaml temp_project/temp_app/
+          cp -r lib temp_project/temp_app/
+          cp -r assets temp_project/temp_app/ 2>/dev/null || true
 
-          echo "✅ iOS project recreated completely"
+          # استبدل المشروع المؤقت بالمشروع الأصلي
+          rm -rf temp_project
 
-      - name: Set iOS deployment target to 13.0
+          echo "✅ Nuclear cleanup completed"
+
+      - name: Build with Flutter only
         run: |
-          # تحديث Podfile إلى iOS 13.0
-          if [ -f "ios/Podfile" ]; then
-            sed -i '' 's/platform :ios, .*/platform :ios, '\''13.0'\''/g' ios/Podfile
-            echo "✅ Set iOS deployment target to 13.0"
-          fi
+          # دع Flutter يفعل كل شيء تلقائياً
+          flutter pub get
+          flutter build ipa --release --no-codesign
 
-          # أيضاً تحديث Info.plist إذا لزم الأمر
-          if [ -f "ios/Runner/Info.plist" ]; then
-            plutil -replace MinimumOSVersion -string "13.0" ios/Runner/Info.plist
-            echo "✅ Updated Info.plist to iOS 13.0"
-          fi
+          echo "✅ Build completed without manual pod install"
 
-      - name: Build IPA directly (skip pod install)
-        run: |
-          # بناء IPA مباشرة - Flutter سيتعامل مع Podfile تلقائياً
-          flutter build ipa --release --no-codesign --verbose
-
-          echo "✅ IPA build completed successfully"
-
-      - name: Check if IPA exists
-        run: |
-          if [ -f "build/ios/ipa/*.ipa" ]; then
-            echo "✅ IPA file found:"
-            ls -la build/ios/ipa/
-          else
-            echo "❌ No IPA file found"
-            ls -la build/ || echo "No build directory"
-            exit 1
-          fi
-
-      - name: Upload IPA artifact
+      - name: Upload success artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-ipa
+          name: success-ipa
           path: build/ios/ipa/*.ipa
-          retention-days: 7
-
-      - name: Upload build logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-logs
-          path: |
-            ~/Library/Logs/flutter.log
-            build/**/*.log
