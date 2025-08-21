@@ -1,4 +1,4 @@
-﻿name: Build iOS IPA - Nuclear Option
+﻿name: Build iOS IPA - Final Solution
 
 on:
   workflow_dispatch:
@@ -20,42 +20,48 @@ jobs:
           flutter-version: "3.32.5"
           cache: true
 
-      - name: Nuclear cleanup
+      - name: Clean and prepare
         run: |
-          # احذف كل شيء متعلق بالبناء
           flutter clean
-          rm -rf ios build .dart_tool .packages .flutter-plugins
+          rm -rf ios/Pods ios/Podfile.lock
 
-          # أنشئ مشروع جديد مؤقت لاكتشاف الهيكل
-          mkdir -p temp_project
-          cd temp_project
-          flutter create --template=app --org com.temp temp_app
-          cd ..
+      - name: Get dependencies
+        run: flutter pub get
 
-          # انقل ملفات iOS الجديدة
-          rm -rf ios
-          cp -r temp_project/temp_app/ios .
-
-          # انقل pubspec.yaml والمحتوى الأصلي
-          cp pubspec.yaml temp_project/temp_app/
-          cp -r lib temp_project/temp_app/
-          cp -r assets temp_project/temp_app/ 2>/dev/null || true
-
-          # استبدل المشروع المؤقت بالمشروع الأصلي
-          rm -rf temp_project
-
-          echo "✅ Nuclear cleanup completed"
-
-      - name: Build with Flutter only
+      - name: Recreate iOS project with proper platform
         run: |
-          # دع Flutter يفعل كل شيء تلقائياً
-          flutter pub get
-          flutter build ipa --release --no-codesign
+          # احذف مجلد ios بالكامل
+          rm -rf ios
 
-          echo "✅ Build completed without manual pod install"
+          # أنشئ مشروع iOS جديد
+          flutter create --platforms=ios --ios-language=swift --org com.yourcompany .
 
-      - name: Upload success artifact
+          # إجبار iOS 13.0 في جميع الملفات
+          if [ -f "ios/Podfile" ]; then
+            sed -i '' 's/platform :ios, .*/platform :ios, '\''13.0'\''/g' ios/Podfile
+          fi
+
+          if [ -f "ios/Runner/Info.plist" ]; then
+            plutil -replace MinimumOSVersion -string "13.0" ios/Runner/Info.plist
+          fi
+
+          if [ -f "ios/Runner.xcodeproj/project.pbxproj" ]; then
+            sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 12.0;/IPHONEOS_DEPLOYMENT_TARGET = 13.0;/g' ios/Runner.xcodeproj/project.pbxproj
+          fi
+
+          echo "✅ iOS project recreated with platform 13.0"
+
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          sudo gem install cocoapods
+          pod install --repo-update
+
+      - name: Build IPA
+        run: flutter build ipa --release --no-codesign
+
+      - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: success-ipa
+          name: app-ipa
           path: build/ios/ipa/*.ipa
