@@ -1,4 +1,4 @@
-﻿name: Build iOS IPA - Final Solution
+﻿name: Build iOS IPA - Simple Approach
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ on:
 jobs:
   build-ipa:
     runs-on: macos-latest
-    timeout-minutes: 60
+    timeout-minutes: 25
 
     steps:
       - name: Checkout code
@@ -23,44 +23,17 @@ jobs:
       - name: Clean and prepare
         run: |
           flutter clean
-          rm -rf ios/Pods ios/Podfile.lock
+          rm -rf ios build
 
-      - name: Get dependencies
-        run: flutter pub get
-
-      - name: Recreate iOS project with proper platform
+      - name: Build IPA with Flutter only
         run: |
-          # احذف مجلد ios بالكامل
-          rm -rf ios
+          # دع Flutter يتعامل مع كل شيء تلقائياً
+          flutter pub get
+          flutter build ipa --release --no-codesign
 
-          # أنشئ مشروع iOS جديد
-          flutter create --platforms=ios --ios-language=swift --org com.yourcompany .
+          echo "✅ Build completed using Flutter's automatic setup"
 
-          # إجبار iOS 13.0 في جميع الملفات
-          if [ -f "ios/Podfile" ]; then
-            sed -i '' 's/platform :ios, .*/platform :ios, '\''13.0'\''/g' ios/Podfile
-          fi
-
-          if [ -f "ios/Runner/Info.plist" ]; then
-            plutil -replace MinimumOSVersion -string "13.0" ios/Runner/Info.plist
-          fi
-
-          if [ -f "ios/Runner.xcodeproj/project.pbxproj" ]; then
-            sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 12.0;/IPHONEOS_DEPLOYMENT_TARGET = 13.0;/g' ios/Runner.xcodeproj/project.pbxproj
-          fi
-
-          echo "✅ iOS project recreated with platform 13.0"
-
-      - name: Install CocoaPods
-        run: |
-          cd ios
-          sudo gem install cocoapods
-          pod install --repo-update
-
-      - name: Build IPA
-        run: flutter build ipa --release --no-codesign
-
-      - name: Upload IPA artifact
+      - name: Upload success artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-ipa
