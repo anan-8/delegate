@@ -1,4 +1,4 @@
-﻿name: Build iOS IPA - Simple Approach
+﻿name: Build iOS IPA - Simple
 
 on:
   workflow_dispatch:
@@ -8,7 +8,6 @@ on:
 jobs:
   build-ipa:
     runs-on: macos-latest
-    timeout-minutes: 25
 
     steps:
       - name: Checkout code
@@ -18,22 +17,15 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.32.5"
-          cache: true
 
-      - name: Clean and prepare
+      - name: Create and build iOS
         run: |
           flutter clean
-          rm -rf ios build
-
-      - name: Build IPA with Flutter only
-        run: |
-          # دع Flutter يتعامل مع كل شيء تلقائياً
           flutter pub get
+          flutter create --platforms=ios .
           flutter build ipa --release --no-codesign
 
-          echo "✅ Build completed using Flutter's automatic setup"
-
-      - name: Upload success artifact
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: app-ipa
