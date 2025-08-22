@@ -1,4 +1,4 @@
-workflows:
+﻿workflows:
   ios-workflow:
     name: iOS Build Workflow
     environment:
@@ -28,7 +28,7 @@ workflows:
 
       - name: Build IPA
         script: |
-          flutter build ipa --release --no-codesign --export-options-plist=ios/ExportOptions.plist
+          flutter build ipa --release --no-codesign --export-options-plist=ExportOptions.plist
           mkdir -p build/ios/ipa
           xcrun xcodebuild -exportArchive \
             -archivePath build/ios/archive/Runner.xcarchive \
