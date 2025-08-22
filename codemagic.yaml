@@ -11,10 +11,11 @@
         - pattern: main
           include: true
     scripts:
-      - name: Build IPA
+      - name: Build with Flutter only
         script: |
           flutter clean
           flutter pub get
+          rm -rf ios
           flutter build ipa --release --no-codesign
     artifacts:
       - build/ios/ipa/*.ipa
