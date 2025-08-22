@@ -3,7 +3,7 @@
     name: iOS Build Workflow
     environment:
       vars:
-        BUNDLE_ID: \"com.anan8.delegate\"
+        BUNDLE_ID: "com.anan8.delegate"
     triggering:
       events:
         - push
@@ -15,20 +15,20 @@
         script: |
           flutter clean
           flutter pub get
-          
+
       - name: Create iOS project with correct platform
         script: |
           rm -rf ios
           flutter create --platforms=ios --org com.anan8.delegate .
-          
-          # إجبار iOS 14.0 في جميع الملفات
-          sed -i '' 's/platform :ios, .*/platform :ios, \"14.0\"/g' ios/Podfile
-          plutil -replace MinimumOSVersion -string \"14.0\" ios/Runner/Info.plist
+
+          # إجبار iOS 14.0 في جميع الملفات (بدون اقتباسات مزدوجة)
+          sed -i '' 's/platform :ios, .*/platform :ios, "14.0"/g' ios/Podfile
+          plutil -replace MinimumOSVersion -string "14.0" ios/Runner/Info.plist
           sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 12.0;/IPHONEOS_DEPLOYMENT_TARGET = 14.0;/g' ios/Runner.xcodeproj/project.pbxproj
-          
+
       - name: Build IPA
         script: |
           flutter build ipa --release --no-codesign
-          
+
     artifacts:
       - build/ios/ipa/*.ipa
