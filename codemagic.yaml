@@ -16,16 +16,20 @@
           flutter clean
           flutter pub get
 
-      - name: Build without CocoaPods
+      - name: Create iOS project
         script: |
           rm -rf ios
+          flutter create --platforms=ios --org com.anan8.delegate .
+
+      - name: Build iOS without CocoaPods
+        script: |
           flutter build ios --release --no-codesign --no-pub --verbose
 
       - name: Check build results
         script: |
           if [ -d \"build/ios\" ]; then
             echo \"✅ Build successful! Files:\"
-            find build/ios -name \"*.app\" -o -name \"*.xcarchive\" 2>/dev/null || echo \"No app files but directory exists\"
+            find build/ios -name \"*.app\" 2>/dev/null || echo \"No .app files but build directory exists\"
           else
             echo \"❌ Build failed - no build directory\"
             exit 1
@@ -33,4 +37,4 @@
 
     artifacts:
       - build/ios/
-      - build/ios/**/*
+      - build/ios/**/*.app
