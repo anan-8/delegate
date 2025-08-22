@@ -1,4 +1,4 @@
-workflows:
+﻿workflows:
   ios-workflow:
     name: iOS Build Workflow
     environment:
@@ -16,29 +16,21 @@ workflows:
           flutter clean
           flutter pub get
 
-      - name: Create iOS project with correct platform
+      - name: Build without CocoaPods
         script: |
           rm -rf ios
-          flutter create --platforms=ios --org com.anan8.delegate .
-          sed -i '' 's/platform :ios, .*/platform :ios, \"14.0\"/g' ios/Podfile
-          plutil -replace MinimumOSVersion -string 14.0 ios/Runner/Info.plist
+          flutter build ios --release --no-codesign --no-pub --verbose
 
-      - name: Build iOS with debug first
-        script: |
-          flutter build ios --debug --no-codesign
-
-      - name: Verify build success
+      - name: Check build results
         script: |
           if [ -d \"build/ios\" ]; then
-            echo \"? Build successful! Contents:\"
-            find build/ios -name \"*.app\" -o -name \"*.xcarchive\" 2>/dev/null || echo \"No app files found, but build directory exists\"
-            ls -la build/ios/
+            echo \"✅ Build successful! Files:\"
+            find build/ios -name \"*.app\" -o -name \"*.xcarchive\" 2>/dev/null || echo \"No app files but directory exists\"
           else
-            echo \"? Build failed - no build directory found\"
+            echo \"❌ Build failed - no build directory\"
             exit 1
           fi
 
     artifacts:
       - build/ios/
-      - build/ios/**/*.app
-      - build/ios/**/*.xcarchive
+      - build/ios/**/*
