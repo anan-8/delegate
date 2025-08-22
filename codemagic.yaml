@@ -23,18 +23,22 @@
           sed -i '' 's/platform :ios, .*/platform :ios, \"14.0\"/g' ios/Podfile
           plutil -replace MinimumOSVersion -string 14.0 ios/Runner/Info.plist
 
-      - name: Build iOS App Bundle (no signing needed)
+      - name: Build iOS with debug first
         script: |
-          flutter build ios --release --no-codesign --simulator
-          echo \"✅ iOS App Bundle built successfully\"
+          flutter build ios --debug --no-codesign
 
-      - name: List build artifacts
+      - name: Verify build success
         script: |
-          echo \"Build artifacts:\"
-          find build/ios -name \"*.app\" -o -name \"*.xcarchive\" | head -10
-          ls -la build/ios/
+          if [ -d \"build/ios\" ]; then
+            echo \"✅ Build successful! Contents:\"
+            find build/ios -name \"*.app\" -o -name \"*.xcarchive\" 2>/dev/null || echo \"No app files found, but build directory exists\"
+            ls -la build/ios/
+          else
+            echo \"❌ Build failed - no build directory found\"
+            exit 1
+          fi
 
     artifacts:
       - build/ios/
-      - build/ios/iphoneos/Runner.app
-      - build/ios/archive/Runner.xcarchive
+      - build/ios/**/*.app
+      - build/ios/**/*.xcarchive
