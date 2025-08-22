@@ -22,16 +22,19 @@
           flutter create --platforms=ios --org com.anan8.delegate .
           sed -i '' 's/platform :ios, .*/platform :ios, \"14.0\"/g' ios/Podfile
           plutil -replace MinimumOSVersion -string 14.0 ios/Runner/Info.plist
-          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 12.0;/IPHONEOS_DEPLOYMENT_TARGET = 14.0;/g' ios/Runner.xcodeproj/project.pbxproj
 
-      - name: Create ExportOptions.plist
+      - name: Build iOS App Bundle (no signing needed)
         script: |
-          echo '<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"><plist version=\"1.0\"><dict><key>compileBitcode</key><false/><key>method</key><string>development</string><key>provisioningProfiles</key><dict><key>com.anan8.delegate.delegate</key><string>iOS Team Provisioning Profile: *</string></dict><key>signingStyle</key><string>manual</string><key>stripSwiftSymbols</key><true/><key>thinning</key><string>&lt;none&gt;</string></dict></plist>' > ExportOptions.plist
-          echo \"ExportOptions.plist created\"
+          flutter build ios --release --no-codesign --simulator
+          echo \"✅ iOS App Bundle built successfully\"
 
-      - name: Build IPA
+      - name: List build artifacts
         script: |
-          flutter build ipa --release --no-codesign --export-options-plist=ExportOptions.plist
+          echo \"Build artifacts:\"
+          find build/ios -name \"*.app\" -o -name \"*.xcarchive\" | head -10
+          ls -la build/ios/
 
     artifacts:
-      - build/ios/ipa/*.ipa
+      - build/ios/
+      - build/ios/iphoneos/Runner.app
+      - build/ios/archive/Runner.xcarchive
