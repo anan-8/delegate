@@ -1,9 +1,9 @@
-workflows:
+﻿workflows:
   ios-workflow:
     name: iOS Build Workflow
     environment:
       vars:
-        BUNDLE_ID: "com.anan8.delegate"
+        BUNDLE_ID: \"com.anan8.delegate\"
     triggering:
       events:
         - push
@@ -21,19 +21,42 @@ workflows:
           rm -rf ios
           flutter create --platforms=ios --org com.anan8.delegate .
 
-          # ????? iOS 14.0 ?? ???? ???????
-          sed -i '' 's/platform :ios, .*/platform :ios, "14.0"/g' ios/Podfile
+          # إجبار iOS 14.0 في جميع الملفات
+          sed -i '' 's/platform :ios, .*/platform :ios, \"14.0\"/g' ios/Podfile
           plutil -replace MinimumOSVersion -string 14.0 ios/Runner/Info.plist
           sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 12.0;/IPHONEOS_DEPLOYMENT_TARGET = 14.0;/g' ios/Runner.xcodeproj/project.pbxproj
+
+      - name: Create ExportOptions.plist
+        script: |
+          # أنشئ الملف تلقائياً
+          cat > ExportOptions.plist << 'EOL'
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
+<dict>
+    <key>compileBitcode</key>
+    <false/>
+    <key>method</key>
+    <string>development</string>
+    <key>provisioningProfiles</key>
+    <dict>
+        <key>com.anan8.delegate.delegate</key>
+        <string>iOS Team Provisioning Profile: *</string>
+    </dict>
+    <key>signingStyle</key>
+    <string>manual</string>
+    <key>stripSwiftSymbols</key>
+    <true/>
+    <key>thinning</key>
+    <string>&lt;none&gt;</string>
+</dict>
+</plist>
+EOL
+          echo \"✅ ExportOptions.plist created\"
 
       - name: Build IPA
         script: |
           flutter build ipa --release --no-codesign --export-options-plist=ExportOptions.plist
-          mkdir -p build/ios/ipa
-          xcrun xcodebuild -exportArchive \
-            -archivePath build/ios/archive/Runner.xcarchive \
-            -exportPath build/ios/ipa \
-            -exportOptionsPlist ios/Runner/ExportOptions.plist || true
 
     artifacts:
       - build/ios/ipa/*.ipa
