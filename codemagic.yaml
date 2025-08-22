@@ -20,15 +20,12 @@
         script: |
           rm -rf ios
           flutter create --platforms=ios --org com.anan8.delegate .
-
-          # إجبار iOS 14.0 في جميع الملفات
           sed -i '' 's/platform :ios, .*/platform :ios, \"14.0\"/g' ios/Podfile
           plutil -replace MinimumOSVersion -string 14.0 ios/Runner/Info.plist
           sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 12.0;/IPHONEOS_DEPLOYMENT_TARGET = 14.0;/g' ios/Runner.xcodeproj/project.pbxproj
 
       - name: Create ExportOptions.plist
         script: |
-          # أنشئ الملف تلقائياً
           cat > ExportOptions.plist << 'EOL'
 <?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
@@ -52,7 +49,7 @@
 </dict>
 </plist>
 EOL
-          echo \"✅ ExportOptions.plist created\"
+          echo \"ExportOptions.plist created\"
 
       - name: Build IPA
         script: |
