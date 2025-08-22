@@ -1,0 +1,36 @@
+workflows:
+  ios-workflow:
+    name: iOS Build
+    environment:
+      groups:
+        - app_store_credentials
+      vars:
+        BUNDLE_ID: "com.anan8.delegate"
+        XCODE_WORKSPACE: "ios/Runner.xcworkspace"
+        XCODE_SCHEME: "Runner"
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+    scripts:
+      - name: Flutter Setup
+        script: |
+          flutter packages pub get
+      - name: iOS Setup
+        script: |
+          cd ios
+          pod install
+      - name: Build iOS
+        script: |
+          xcodebuild build -workspace "$XCODE_WORKSPACE" -scheme "$XCODE_SCHEME" \
+          -destination generic/platform=iOS \
+          -configuration Release \
+          CODE_SIGNING_ALLOWED=NO
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      email:
+        recipients:
+          - ahmadalhmoud717gmail.com
