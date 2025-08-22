@@ -1,4 +1,4 @@
-﻿workflows:
+workflows:
   ios-workflow:
     name: iOS Build Workflow
     environment:
@@ -21,14 +21,14 @@
           rm -rf ios
           flutter create --platforms=ios --org com.anan8.delegate .
 
-          # إجبار iOS 14.0 في جميع الملفات
+          # ????? iOS 14.0 ?? ???? ???????
           sed -i '' 's/platform :ios, .*/platform :ios, "14.0"/g' ios/Podfile
           plutil -replace MinimumOSVersion -string 14.0 ios/Runner/Info.plist
           sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 12.0;/IPHONEOS_DEPLOYMENT_TARGET = 14.0;/g' ios/Runner.xcodeproj/project.pbxproj
 
       - name: Build IPA
         script: |
-          flutter build ipa --release --no-codesign
+          flutter build ipa --release --no-codesign --export-options-plist=ios/ExportOptions.plist
           mkdir -p build/ios/ipa
           xcrun xcodebuild -exportArchive \
             -archivePath build/ios/archive/Runner.xcarchive \
