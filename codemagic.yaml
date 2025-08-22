@@ -1,4 +1,4 @@
-﻿workflows:
+workflows:
   ios-workflow:
     name: iOS Build Workflow
     environment:
