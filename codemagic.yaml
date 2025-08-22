@@ -1,6 +1,6 @@
 workflows:
   ios-workflow:
-    name: iOS Build
+    name: iOS Build Workflow
     environment:
       groups:
         - app_store_credentials
@@ -15,22 +15,47 @@ workflows:
         - pattern: main
           include: true
     scripts:
-      - name: Flutter Setup
+      - name: Install Flutter dependencies
         script: |
-          flutter packages pub get
-      - name: iOS Setup
+          flutter pub get
+
+      - name: Create iOS directory if missing
+        script: |
+          if [ ! -d "ios" ]; then
+            echo "Creating iOS directory..."
+            flutter create --platforms=ios --org com.anan8.delegate .
+          fi
+
+      - name: Set iOS deployment target to 13.0
+        script: |
+          if [ -f "ios/Podfile" ]; then
+            sed -i '' 's/platform :ios, .*/platform :ios, "13.0"/g' ios/Podfile
+          fi
+
+          if [ -f "ios/Runner/Info.plist" ]; then
+            plutil -replace MinimumOSVersion -string "13.0" ios/Runner/Info.plist
+          fi
+
+      - name: Install CocoaPods dependencies
         script: |
           cd ios
-          pod install
-      - name: Build iOS
+          pod install --repo-update
+
+      - name: Build iOS IPA
         script: |
-          xcodebuild build -workspace "$XCODE_WORKSPACE" -scheme "$XCODE_SCHEME" \
-          -destination generic/platform=iOS \
-          -configuration Release \
-          CODE_SIGNING_ALLOWED=NO
+          flutter build ipa --release --no-codesign --verbose
+
+      - name: List build artifacts
+        script: |
+          ls -la build/ios/ipa/
+
     artifacts:
       - build/ios/ipa/*.ipa
+
     publishing:
       email:
         recipients:
-          - ahmadalhmoud717gmail.com
+          - email: ahmadalhmoud717@gmail.com
+        notify:
+          success: true
+          failure: true
