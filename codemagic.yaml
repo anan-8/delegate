@@ -1,4 +1,4 @@
-﻿workflows:
+workflows:
   ios-workflow:
     name: iOS Build Workflow
     environment:
@@ -30,11 +30,11 @@
       - name: Verify build success
         script: |
           if [ -d \"build/ios\" ]; then
-            echo \"✅ Build successful! Contents:\"
+            echo \"? Build successful! Contents:\"
             find build/ios -name \"*.app\" -o -name \"*.xcarchive\" 2>/dev/null || echo \"No app files found, but build directory exists\"
             ls -la build/ios/
           else
-            echo \"❌ Build failed - no build directory found\"
+            echo \"? Build failed - no build directory found\"
             exit 1
           fi
 
