@@ -11,11 +11,19 @@
         - pattern: main
           include: true
     scripts:
-      - name: Build with Flutter only
+      - name: Clean and setup
         script: |
           flutter clean
           flutter pub get
+          
+      - name: Create iOS project
+        script: |
           rm -rf ios
+          flutter create --platforms=ios --org com.anan8.delegate .
+          
+      - name: Build IPA
+        script: |
           flutter build ipa --release --no-codesign
+          
     artifacts:
       - build/ios/ipa/*.ipa
