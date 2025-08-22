@@ -16,10 +16,15 @@
           flutter clean
           flutter pub get
           
-      - name: Create iOS project
+      - name: Create iOS project with correct platform
         script: |
           rm -rf ios
           flutter create --platforms=ios --org com.anan8.delegate .
+          
+          # إجبار iOS 13.0 في جميع الملفات
+          sed -i '' 's/platform :ios, .*/platform :ios, \"13.0\"/g' ios/Podfile
+          plutil -replace MinimumOSVersion -string \"13.0\" ios/Runner/Info.plist
+          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 12.0;/IPHONEOS_DEPLOYMENT_TARGET = 13.0;/g' ios/Runner.xcodeproj/project.pbxproj
           
       - name: Build IPA
         script: |
